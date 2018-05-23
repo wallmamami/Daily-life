@@ -1,5 +1,6 @@
 #include "BloomFilter.h"
 #include "BitMap.h"
+#include "comm.h"
 
 //初始化
 void BloomFilterInit(BFilter* bf, int capacity, PSTI* pSTI, int size)//size表示数组的大小

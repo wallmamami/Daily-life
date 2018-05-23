@@ -65,15 +65,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\HashTable_test\HashTable_test\comm.c" />
     <ClCompile Include="BitMap.c" />
     <ClCompile Include="BloomFilter.c" />
+    <ClCompile Include="comm.c" />
     <ClCompile Include="test.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\HashTable_test\HashTable_test\comm.h" />
     <ClInclude Include="BitMap.h" />
     <ClInclude Include="BloomFilter.h" />
+    <ClInclude Include="comm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
