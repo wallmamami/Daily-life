@@ -54,7 +54,7 @@ void* thread_serevice(void* arg)
     //服务完之后一定要关闭文件描述符
     close(info->sock);
 
-    //且一定要释放info
+    //因为info是在堆上动态申请的,所以一定要释放info
     free(info);
 }
 
