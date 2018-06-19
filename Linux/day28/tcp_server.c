@@ -1,3 +1,5 @@
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <string.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -108,6 +110,7 @@ int main(int argc, char* argv[])
        pid_t id = fork();
        if(id == 0)//child
        {
+            close(listen_sock);
             //这里可以在子进程中再创建子进程，子进程退出，
             //孙子进程成为孤儿进程，孙子进程提供服务，退出后由
             //1号进程回收，不会造成内存泄露
@@ -119,7 +122,10 @@ int main(int argc, char* argv[])
             }
        }
        else if(id > 0)//father
-       {}
+       {
+           close(new_sock);
+           waitpid(id, NULL, 0);
+       }
        else
        {
            perror("fork");
