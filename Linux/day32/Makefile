@@ -1,5 +1,5 @@
 select: select.c
-	gcc -o $@ $^
+	gcc -o $@ $^ -g
 
 .PHONY: clean
 

@@ -79,8 +79,8 @@ void service(int fd_arr[], int num, fd_set* rfds)
                 }
 
                 //new_sock现在不一定就绪，因为有可能只是连接，不发消息，所以现在只是将其添加到数组中，等待下次就绪
-                printf("get a new connect: [%s:%d]", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
-                if(arr_add(fd_arr, MAX_FD, fd) < 0)
+                printf("get a new connect: [%s:%d]\n", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+                if(arr_add(fd_arr, MAX_FD, new_sock) < 0)
                 {
                     printf("service are too busy!\n");
                     close(new_sock);
@@ -89,10 +89,10 @@ void service(int fd_arr[], int num, fd_set* rfds)
             else//如果是其他文件描述符就绪，表示可以读取
             {
                 char buf[1024] = {0};
-                ssize_t s = read(fd, buf, sizeof(buf));
+                ssize_t s = read(fd, buf, sizeof(buf)-1);
                 if(s > 0)
                 {
-                    buf[s-1] = 0;
+                    buf[s] = 0;
                     printf("client# %s\n", buf);
                 }
                 
@@ -115,7 +115,7 @@ void service(int fd_arr[], int num, fd_set* rfds)
 
 int startup(int port)
 {
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
         perror("socket");
@@ -166,12 +166,12 @@ int main(int argc, char* argv[])
     int max_fd = 0;//用来保存集合中值最大的文件描述符+1
     while(1)
     {
-        struct timeval timeout = {5, 0};//表示如果5后没有事件就绪，select超时返回
+        //struct timeval timeout = {5, 0};//表示如果5后没有事件就绪，select超时返回
         FD_ZERO(&rfds);//清空读事件集
 
         max_fd = set_rfds(fd_arr, MAX_FD, &rfds);
 
-        switch(select(max_fd+1, &rfds, NULL, NULL, &timeout))
+        switch(select(max_fd+1, &rfds, NULL, NULL, NULL))
         {
         case 0:
             printf("timeout......\n");
