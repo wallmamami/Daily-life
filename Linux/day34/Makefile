@@ -1,5 +1,5 @@
 epoll_ET_server: epoll_ET_server.c
-	gcc -o $@ $^
+	gcc -o $@ -g $^
 
 .PHONY: clean
 

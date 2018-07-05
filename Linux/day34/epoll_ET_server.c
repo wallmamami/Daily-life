@@ -76,10 +76,12 @@ static my_accept(int fd, int epfd)
 
         printf("get a new client [%s:%d]\n", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 
+        //一定要将new_sock设置为非阻塞模式
+        SetNonBlock(new_sock);
         //将新连接设置为ET模式，并添加到红黑树当中
         ev.events = EPOLLIN | EPOLLET;
-        ev.data.fd = fd;
-        epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+        ev.data.fd = new_sock;
+        epoll_ctl(epfd, EPOLL_CTL_ADD, new_sock, &ev);
 
     }while(1);
 }
@@ -90,8 +92,10 @@ static my_read(int fd, char* buf, int size)
     ssize_t s = 0;
     while((s = read(fd, buf, size-total)) > 0)
     {
+        //printf("s = %d\n", s);
         total += s;
     }
+    //printf("read out!\n");
 
     return total;
 }
@@ -110,11 +114,11 @@ static serviceIO(int epfd, struct epoll_event* recvs, int size, int listen_sock)
                 //因为是ET模式，所以要保证一次读完，所以不能直接调用accept
                 //ET模式下，一定要是非阻塞模式，因为有可能这次恰好读完，下次再读就会阻塞
                 my_accept(fd, epfd);
-                printf("accept quit!\n");
+     //           printf("accept quit!\n");
             }
             else
             {
-                printf("enter read!\n");
+      //          printf("enter read!\n");
                 char buf[10240];//假设缓冲区一定能够接收完
 
                 //也要保证一次读完
@@ -122,12 +126,13 @@ static serviceIO(int epfd, struct epoll_event* recvs, int size, int listen_sock)
                 if(s > 0)
                 {
                     buf[s] = 0;
+       //             printf("125\n");
                     printf("client# %s\n", buf);
 
                     //读完之后，再将关心的事件设置为写，表示读完客户端发的消息，再回显给他
                     SetNonBlock(fd);
 
-                    ev.events = EPOLLIN | EPOLLET;//这里虽然是修改，但是也一定要记得加EPOLLET
+                    ev.events = EPOLLOUT | EPOLLET;//这里虽然是修改，但是也一定要记得加EPOLLET
                     ev.data.fd = fd;
                     epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev);
                 }
