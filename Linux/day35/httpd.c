@@ -93,18 +93,6 @@ int get_line(int sock, char line[], int size)
     return i;
 }
 
-void echo_error(int errCode)
-{
-    switch(errCode)
-    {
-    case 404:
-        break;
-    case 501:
-        break;
-    default:
-        break;
-    }
-}
 
 void clear_header(int sock)
 {
@@ -115,6 +103,47 @@ void clear_header(int sock)
         get_line(sock, line, sizeof(line));
 
     }while(strcmp(line, "\n") != 0);//读到空行表示读完HTTP请求，因为GET方法一般是没有正文的
+}
+
+static void show_404(int sock)
+{
+    clear_header(sock);
+    
+    char line[MAX];
+    //响应也需要响应标准格式(响应行, 响应报头)
+    sprintf(line, "HTTP/1.0 200 OK\r\n");
+    send(sock, line, strlen(line), 0);
+    sprintf(line, "Content-Type: text/html\r\n");
+    send(sock, line, strlen(line), 0);
+
+    sprintf(line, "\r\n");//一定注意，还有空行
+    send(sock, line, strlen(line), 0);
+
+    const char* err = "wwwroot/error/404.html";
+    int fd = open(err, O_RDONLY);
+    struct stat st;
+    stat(err, &st);
+
+    sendfile(sock, fd, NULL, st.st_size);
+    close(fd);
+
+}
+static void echo_error(int errCode, int sock)
+{
+    switch(errCode)
+    {
+    case 403:
+        break;
+    case 404:
+        show_404(sock);
+        break;
+    case 501:
+        break;
+    case 503:
+        break;
+    default:
+        break;
+    }
 }
 
 void echo_www(int sock, char path[], int size, int* err)
@@ -137,7 +166,6 @@ void echo_www(int sock, char path[], int size, int* err)
     send(sock, line, strlen(line), 0);
     sprintf(line, "Content-Type: text/html\r\n");
     send(sock, line, strlen(line), 0);
-        printf("error\n");
 
     sprintf(line, "\r\n");//一定注意，还有空行
     send(sock, line, strlen(line), 0);
@@ -280,7 +308,7 @@ static void* handler_request(void* arg)
 end:
     if(errCode != 200)
     {
-        echo_error(errCode);
+        echo_error(errCode, sock);
     }
     close(sock);
 }
