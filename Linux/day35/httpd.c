@@ -1,3 +1,5 @@
+#include <sys/sendfile.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <strings.h>
 #include <ctype.h>
@@ -93,12 +95,55 @@ int get_line(int sock, char line[], int size)
 
 void echo_error(int errCode)
 {
-
+    switch(errCode)
+    {
+    case 404:
+        break;
+    case 501:
+        break;
+    default:
+        break;
+    }
 }
 
-void echo_www(int sock, char path[], int size);
+void clear_header(int sock)
 {
+    char line[MAX];
 
+    do
+    {
+        get_line(sock, line, sizeof(line));
+
+    }while(strcmp(line, "\n") != 0);//读到空行表示读完HTTP请求，因为GET方法一般是没有正文的
+}
+
+void echo_www(int sock, char path[], int size, int* err)
+{
+    //进入这里，说明一定是GET方法，之前只是读了HTTP请求的请求行
+    //在响应之前一定要保证读完HTTP请求
+    clear_header(sock);
+
+    int fd = open(path, O_RDONLY);
+    if(fd < 0)
+    {
+        *err = 404;
+        return;
+    }
+
+    char line[MAX];
+
+    //响应也需要响应标准格式(响应行, 响应报头)
+    sprintf(line, "HTTP/1.0 200 OK\r\n");
+    send(sock, line, strlen(line), 0);
+    sprintf(line, "Content-Type: text/html\r\n");
+    send(sock, line, strlen(line), 0);
+        printf("error\n");
+
+    sprintf(line, "\r\n");//一定注意，还有空行
+    send(sock, line, strlen(line), 0);
+
+    sendfile(sock, fd, NULL, size);
+    close(fd);
 }
 
 static void* handler_request(void* arg)
@@ -155,7 +200,7 @@ static void* handler_request(void* arg)
     }
 
     //因为在请求行中是以空格分隔的,所以这里要跳过空格
-    while(j < sizeof(line) && !isspace(line[j]))
+    while(j < sizeof(line) && isspace(line[j]))
     {
         j++;
     }
@@ -225,7 +270,8 @@ static void* handler_request(void* arg)
 
         else
         {
-            echo_www(sock, path, st.st_size);
+            printf("path = %s\n", path);
+            echo_www(sock, path, st.st_size, &errCode);
         }
     }
 
