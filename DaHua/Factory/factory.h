@@ -17,7 +17,7 @@ public:
   void SetB(double B) { _numB = B; }
   double GetB()const { return _numB; }
 
-  virtual double GetResut() { double res = 0; return res; }
+  virtual double GetResut();
   
 private:
     double _numA;
