@@ -1,0 +1,6 @@
+into 0, i = 0
+into 3, i = 0
+into 0, i = 1
+into 3, i = 1
+into 3, i = 2
+into 3, i = 3
